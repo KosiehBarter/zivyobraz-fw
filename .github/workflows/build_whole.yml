@@ -3,19 +3,28 @@ name: PlatformIO compile suite
 
 # Define on what action this will run
 on:
-  - push
+  push:
+    branches:
+      - '*' # Can be executed on any branch
+      - '!master' # Exclamation mark negates it, so do not run it when on master branch.
 
 # Jobs definition
 jobs:
   # Pre-build
-  prebuild:
+  build-nodisplay:
+
     # Runner definition
     runs-on: ubuntu-latest
     steps:
       # Name of step
       - name: Pre-Build preparation
+        # Define conditiion to run on a given branch - given "stage" only
+        if: github.ref == 'refs/heads/kb-citest'
+        # What will be executed
         run: pip install --upgrade platformio
+
       # Requirements list
+        # Cloen & Checkout the branch
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
@@ -23,20 +32,26 @@ jobs:
             ~/.cache/pip
             ~/.platformio/.cache
           key: ${{ runner.os }}-pio
+        # Use a given version of Python
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
+        
+        # Cleanup after "pre-build" is done automatically
 
-
-  build:
-    # Runner definition
-    runs-on: ubuntu-latest
-    # Dependencies from previous jobs
-    needs: 
-      - prebuild
-
-    steps:
+        # Environment variables for prebuild "stage"
+        env:
+          USE_DISPLAY: false
+          
+      
       # Name of step
-      - name: "Build"
+      - name: "Build - NoDisplay"
+
+        # Define conditiion to run on a given branch.
+        if: github.ref == 'refs/heads/kb-citest'
+        # What wuill be executed
         run: pio run
 
+        # Define ENV variables to alter behavior of the compiler
+        env:
+          USE_DISPLAY: false
