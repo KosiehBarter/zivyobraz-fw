@@ -1,0 +1,42 @@
+# Define name for the Build suite
+name: PlatformIO compile suite
+
+# Define on what action this will run
+on:
+  - push
+
+# Jobs definition
+jobs:
+  # Pre-build
+  prebuild:
+    # Runner definition
+    runs-on: ubuntu-latest
+    steps:
+      # Name of step
+      - name: Pre-Build preparation
+        run: pip install --upgrade platformio
+      # Requirements list
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+
+  build:
+    # Runner definition
+    runs-on: ubuntu-latest
+    # Dependencies from previous jobs
+    needs: 
+      - prebuild
+
+    steps:
+      # Name of step
+      - name: "Build"
+        run: pio run
+
